@@ -1,0 +1,49 @@
+version: '3.9'
+
+## References
+# At this time, v11.5 was latest
+# - https://www.ibm.com/docs/en/db2/11.5?topic=SSEPGG_11.5.0/com.ibm.db2.luw.qb.server.doc/doc/t_install_db2CE_win_img.htm
+
+# On Mac Apple silicon, had to run "export DOCKER_DEFAULT_PLATFORM=linux/amd64" before executing docker-compose commands to start the container
+# we can also set it to x86 "export DOCKER_DEFAULT_PLATFORM=linux/x86_64"
+# Else you may see this type of error "no matching manifest for linux/arm64/v8 in the manifest list entries"
+
+services:
+
+  mylocal_db2server_v1:
+    image: icr.io/db2_community/db2:11.5.8.0
+    container_name: mylocal_db2server_v1
+    restart: always
+    privileged: true
+    volumes:
+      - $PWD/data/db2server_ce:/database
+      - $PWD/user_data:/home/user/
+    ports:
+      - 61000:50000
+    # platform: linux/x86_64
+    environment:
+      LICENSE: accept
+      DB2INSTANCE: db2inst1
+      DB2INST1_PASSWORD: password
+      DBNAME: testdb
+      BLU: false
+      ENABLE_ORACLE_COMPATIBILITY: false
+      UPDATEAVAIL: NO
+      TO_CREATE_SAMPLEDB: true
+      REPODB: false
+      IS_OSXFS: true
+      PERSISTENT_HOME: true
+      HADR_ENABLED: false #High Availability Disaster Recoever, we don't need it locally
+      # ETCD_ENDPOINT: 
+      # ETCD_USERNAME: 
+      # ETCD_PASSWORD: 
+
+
+# After container boots up and completes all its start up tasks (watch the container log to know if has completed or not, it takes really 5= minutes to complete)
+# - Get inside the container `docker exec -it mylocal_db2server_v1 bash -c "su - db2inst1"`
+# - now from inside the container execute this `db2sampl`, which will create new database sample and populates with sample tables and records
+# - now sometimes we may have to start the database using `db2start`
+# - connect to db2sampl by executing command `db2 connect to sample`
+# - Execute a command `db2 "select count(*) from department" `
+# - You can also enter the db2 cli if you are more comfortable with it
+# - You can also connect your DB2 Visualiser tool and try connecting, browse through the tables, execute some sample scripts
